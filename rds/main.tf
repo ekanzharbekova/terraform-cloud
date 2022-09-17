@@ -55,17 +55,24 @@ resource "aws_db_subnet_group" "db" {
 }
 
 
-resource "aws_db_instance" "default" {
-	identifier = "dbname"
-	allocated_storage = 20
-	storage_type = "gp2"
-	engine = "mysql"
-	engine_version = "5.7"
-	instance_class = "db.t2.micro"
-	db_name = "mydb"
-	username = "admin"
-	password = random_password.random.result
-	publicly_accessible = true
-	db_subnet_group_name = aws_db_subnet_group.db.name
-	skip_final_snapshot = true #used to delete the repo in the future without this you cant delete. There are bugs reported 
+resource "aws_rds_cluster" "example" {
+  cluster_identifier = "example"
+  engine             = "aurora-postgresql"
+  engine_mode        = "provisioned"
+  engine_version     = "13.6"
+  database_name      = "test"
+  master_username    = "test"
+  master_password    = "must_be_eight_characters"
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 1.0
+    min_capacity = 0.5
+  }
+}
+
+resource "aws_rds_cluster_instance" "example" {
+  cluster_identifier = aws_rds_cluster.example.id
+  instance_class     = "db.serverless"
+  engine             = aws_rds_cluster.example.engine
+  engine_version     = aws_rds_cluster.example.engine_version
 }
